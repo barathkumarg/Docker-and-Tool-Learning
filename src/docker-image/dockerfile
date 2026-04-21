@@ -1,0 +1,6 @@
+FROM ubuntu
+RUN apt-get update \
+    && apt-get install -y python3 python3-pip
+RUN pip3 install --no-cache-dir flask flask-mysql --break-system-packages
+COPY . /opt/source-code
+ENTRYPOINT FLASK_APP=/opt/source-code/app.py flask run --host=0.0.0
