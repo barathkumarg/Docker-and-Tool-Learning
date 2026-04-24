@@ -1,0 +1,17 @@
+version: '2'
+services:
+  redis:
+    image: redis
+    networks:
+      - flask-app
+  web:
+    build: .
+    container_name: flask-counter-app
+    ports:
+      - "5001:5000"
+    environment:
+      - REDIS_HOST=redis
+    networks:
+      - flask-app
+networks:
+  flask-app:
