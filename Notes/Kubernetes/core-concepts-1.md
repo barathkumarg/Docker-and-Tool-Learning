@@ -1,4 +1,4 @@
-# Kubernetes Core Concepts
+# Kubernetes Core Concepts - Part 1
 
 > **Quick Navigation**: Click any topic below to jump directly to that section.
 
