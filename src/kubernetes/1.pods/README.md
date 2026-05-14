@@ -42,3 +42,43 @@ kubectl pod delete <name>
 ```
 kubectl pod edit <name>
 ```
+
+## YAML Replication set 
+-  Used to create a replicaset which manages the duplicate pods and ensure the desired number of replicas are running at all times.
+
+```yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp-rs
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myredis-pod-replica
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: myredis-pod-replica
+        tier: frontend
+    spec:
+      containers:
+        - name: redis-container
+          image: redis:latest
+          ports:
+            - containerPort: 80
+```
+
+Commonly used commands for ReplicaSet:
+
+```bash
+# Create a ReplicaSet
+kubectl apply -f replicaset.yaml  
+
+# List ReplicaSets
+kubectl get rs  
+
+#Delete the Replcaset
+kubectl delete rs myapp-rs
+```
