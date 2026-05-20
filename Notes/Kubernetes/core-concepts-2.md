@@ -1,5 +1,13 @@
 # Kubernetes Core concepts -Part 2
 
+## Table of Contents
+- <a href="#pods">Pods</a>
+- <a href="#pods---replication">Pods - Replication</a>
+- <a href="#deployments">Deployments</a>
+- <a href="#services">Services</a>
+
+### Topic
+Deployments, ReplicaSets, Pods, and kubectl shorthand commands
 
 ## Pods
 - Containers are encapsulated in a deployable object called **Pods**
@@ -267,5 +275,165 @@ kubectl describe deployment myapp-deployment
 kubectl get all
 ```
 
+- The below commands are shorthands that can be used without first creating a YAML file.
 
+```bash
+# Create an NGINX Pod
+kubectl run nginx --image=nginx
+
+# Generate a Pod manifest YAML file without creating the pod
+kubectl run nginx --image=nginx --dry-run=client -o yaml
+
+# Create a Deployment directly
+kubectl create deployment nginx --image=nginx
+
+# Generate a Deployment YAML manifest without creating it
+kubectl create deployment nginx --image=nginx --dry-run=client -o yaml
+
+# Generate a Deployment YAML and save it to a file
+kubectl create deployment nginx --image=nginx --dry-run=client -o yaml > nginx-deployment.yaml
+
+# Create the Deployment from the saved YAML after editing it
+kubectl create -f nginx-deployment.yaml
+
+# In Kubernetes 1.19+, create a deployment with 4 replicas using dry-run to generate YAML
+kubectl create deployment nginx --image=nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml
+```
+
+## Services
+
+- A Service is an abstraction that defines a logical set of Pods and a policy by which to access them.
+- Enables the communication between different components of an application and with the outside world.
+- It is object like pods/deploymnents but it is not a workload, it is a service that provides access to the workloads (pods).
+
+Scenario: You have a frontend application that needs to communicate with a backend service. The frontend can use a Service to discover and connect to the backend Pods without needing to know their IP addresses.
+
+
+### Types of Services
+#### NodePort:
+- Exposes the service on a static port on each node's IP. Accessible from outside the cluster using `<NodeIP>:<NodePort>`.
+
+- example: Application hosted on the port 80 inside the cluster, but exposed on port 30007 on each node.
+
+- Range of the node port is 30000-32767, and you can specify any port in that range. Kubernetes will route traffic from that port to the target port on the pods.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+spec:
+  type: NodePort
+  selector:
+    app: myapp
+    type: frontend
+  ports:
+    - targetPort: 80
+      port: 80
+      nodePort: 30007
+```
+
+Commands:
+```bash
+# Create a NodePort service
+kubectl apply -f nodeport-service.yaml  
+
+# Get services
+kubectl get services
+
+```
+
+- This service works on single pod - single node, Multiple pods - single node, and multiple pods - multiple nodes scenarios. It is a simple way to expose your application to the outside world, but it has limitations in terms of scalability and load balancing.
+
+#### ClusterIP: 
+- Exposes the service on a cluster-internal IP. This is the default type. It makes the service only reachable from within the cluster.
+
+- Since the Internal communication between the frontend and backend services cannot rely on the external IPs, we use ClusterIP to allow them to communicate within the cluster.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-backend-service
+spec:
+  type: ClusterIP
+  selector:
+    app: myapp
+    type: backend
+  ports:
+    - targetPort: 80
+      port: 80
+```
+
+- Use the same service commands to create and manage ClusterIP services as well.
+
+#### LoadBalancer:
+- Exposes the service externally using a cloud provider's load balancer. This is typically used in cloud environments where you want to expose your service to the internet.
+
+- When we hosted the application across node, we require the IP for the seperate node to access the application, but with LoadBalancer service, we can get a single external IP that load balances traffic to all the nodes hosting the application.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-loadbalancer-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: myapp 
+    type: frontend
+  ports:
+    - targetPort: 80
+      port: 80
+```
+
+## Namespaces
+- Namespaces are a way to divide cluster resources between multiple users (via resource quota).
+- They provide a scope for names. Names of resources need to be unique within a namespace, but not across namespaces.
+- Useful for organizing resources in a cluster, especially in larger environments with multiple teams or projects.
+
+ - By default, Kubernetes creates a `default` namespace for you. You can create additional namespaces as needed.
+
+```bash
+# Create a new namespace
+kubectl create namespace my-namespace 
+```
+
+- Can define the policy on the resource utilization.
+
+- Essential commands
+```bash
+# List namespaces
+kubectl get namespaces
+
+# List pods in a specific namespace
+kubectl get pods -n my-namespace
+
+# List all the pods across all namespaces
+kubectl get pods --all-namespaces
+
+# Set the default namespace for the current context
+kubectl config set-context --current --namespace=my-namespace
+```
+
+- In addition the namespace can be defined in the YAML file as well, and it will be created in that namespace.
+
+```YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  namespace: my-namespace
+  ...
+
+```
+
+**Note**: The communication within the namespace is allowed and names can be referred to without the namespace, but for cross-namespace communication, you need to specify the namespace in the service name (e.g., `my-service.my-namespace.svc.cluster.local`).
+
+## Imperative vs Declarative
+- Imperative: You tell Kubernetes what to do (e.g., `kubectl run nginx --image=nginx`).
+- Declarative: You define the desired state in a YAML file and apply it (e.g., `kubectl apply -f deployment.yaml`).
+- Declarative is generally recommended for better version control and reproducibility, while imperative can be useful for quick testing or one-off tasks.
+
+![](../../resources/images/kubernetes-core-concepts/imperative-command.png)
 
