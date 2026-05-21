@@ -4,10 +4,11 @@
 - <a href="#pods">Pods</a>
 - <a href="#pods---replication">Pods - Replication</a>
 - <a href="#deployments">Deployments</a>
+- <a href="#kubectl-commands">kubectl Commands</a>
 - <a href="#services">Services</a>
 
 ### Topic
-Deployments, ReplicaSets, Pods, and kubectl shorthand commands
+Deployments, ReplicaSets, Pods, kubectl commands, and declarative updates
 
 ## Pods
 - Containers are encapsulated in a deployable object called **Pods**
@@ -67,7 +68,21 @@ spec:
 - `spec`: Desired state of the pod, including container definitions.
 
 ### Kubectl commands
-Generate a pod YAML quickly using dry-run (client-side only):
+#### Declarative updates with `kubectl apply`
+- `kubectl apply -f <file>` is the recommended declarative workflow for creating or updating resources from YAML manifests.
+- If the object does not exist, `apply` creates it. If it already exists, `apply` updates it using a three-way merge.
+- This makes `kubectl apply` idempotent and safe for repeated use as you iterate on manifests.
+
+```bash
+kubectl apply -f pod-definition.yaml
+```
+
+- Use `kubectl apply` whenever you manage resources with configuration files.
+- `kubectl create -f <file>` only creates resources and fails if the resource already exists.
+- `kubectl edit <resource> <name>` is useful for quick live edits, but file-based workflows should use `kubectl apply`.
+
+#### Generate YAML from a shortcut command
+Generate a pod manifest without creating the pod yet:
 
 ```bash
 kubectl run myapp-pod \
@@ -75,7 +90,7 @@ kubectl run myapp-pod \
   --dry-run=client -o yaml > pod-definition.yaml
 ```
 
-Create or update the pod from the manifest:
+Update the live object after editing the manifest:
 
 ```bash
 kubectl apply -f pod-definition.yaml
@@ -93,12 +108,12 @@ View detailed pod information:
 kubectl describe pod myapp-pod
 ```
 
-Why `kubectl edit` is important:
+#### Why `kubectl apply` matters
+- Keeps your cluster in sync with the manifest on disk.
+- Avoids accidental duplicate objects caused by using `kubectl create` on an existing resource.
+- Works well with GitOps-style workflows and version-controlled YAML.
 
-- If you edit the local YAML and run `kubectl create -f ...` again, you may accidentally create a new pod (for example, after changing `metadata.name`), which means another container is started.
-- `kubectl edit pod <pod-name>` updates the existing live object instead of creating a second pod.
-
-Example:
+Example of the wrong flow:
 
 ```bash
 # Existing pod
@@ -112,17 +127,13 @@ kubectl get pods
 # myapp-pod-v2   1/1   Running   <-- extra pod/container created
 ```
 
-Safer update flow:
+Better update flow with apply:
 
 ```bash
-# Edit the running pod directly
-kubectl edit pod myapp-pod
+kubectl apply -f pod-definition.yaml
 ```
 
-- For file-based changes, prefer `kubectl apply -f pod-definition.yaml` instead of running `create` repeatedly.
-
-Run/restart example (standalone Pod):
-
+#### Reapply or restart a standalone Pod
 ```bash
 # Re-apply config (create if missing, update if exists)
 kubectl apply -f pod-definition.yaml
@@ -437,3 +448,28 @@ metadata:
 
 ![](../../resources/images/kubernetes-core-concepts/imperative-command.png)
 
+## Other neccessary commands
+
+### Api resources
+```bash
+# List all API resources
+kubectl api-resources
+
+# Get details about a specific resource
+kubectl explain deployment  
+
+# Explain a specific field in the resource
+kubectl explain deployment.spec.replicas
+
+# Recursively explain all fields in the resource
+kubectl explain deployment --recursive
+
+```
+
+### kubectl apply
+
+- Apply command is used to create or update resources in the cluster based on the YAML manifest. It compares the desired state defined in the YAML with the current state of the cluster and makes necessary changes to achieve the desired state.
+
+- It stands between the live configuration and the desired configuration. It creates or updates resources as needed to match the desired state.
+
+- The kubernetes live object configuration is stored in the cluster, and the desired configuration is stored in the YAML file. When you run `kubectl apply`, it compares the two and updates the live configuration to match the desired configuration.

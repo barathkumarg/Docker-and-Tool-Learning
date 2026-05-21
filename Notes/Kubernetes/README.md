@@ -1,31 +1,33 @@
-# Kubernetes 
+# Kubernetes Notes
 
-## Synopsis
+## Overview
+This directory contains Kubernetes learning notes organized by topic and file. Each file is a dedicated study guide, and the links below point to the primary pages and their unique topic anchors.
 
-This section covers Kubernetes core concepts including cluster architecture (control plane + worker nodes), container runtimes (containerd, CRI-O), storage (etcd), and the Kubernetes API. Learn about the reconciliation loop pattern, controllers for node health/replication/deployments, the scheduling mechanism for pod placement, and how worker node components (kubelet, kube-proxy) work together to manage container orchestration at scale.
+## Files
+- [core-concepts-1.md](core-concepts-1.md) — Cluster architecture, control plane, worker node components, runtimes, and storage.
+- [core-concepts-2.md](core-concepts-2.md) — Pods, replication, Deployments, Services, Namespaces, and `kubectl` workflows.
 
-## Core Concepts
+## Topic index
+### Part 1: Architecture & Control Plane
+- [Cluster Architecture](core-concepts-1.md#cluster-architecture)
+- [Docker vs Containerd](core-concepts-1.md#docker-vs-containerd)
+- [Kube API Server](core-concepts-1.md#kube-api-server)
+- [Kube Scheduler](core-concepts-1.md#kube-scheduler)
+- [Kube Controller Manager](core-concepts-1.md#kube-controller-manager)
+- [Kubelet](core-concepts-1.md#kubelet)
+- [Kube-Proxy](core-concepts-1.md#kube-proxy)
+- [etcd](core-concepts-1.md#etcd)
+- [Runtime CLI Tools](core-concepts-1.md#runtime-cli-tools)
 
-### Architecture & Basics
-- **Cluster Architecture**: Control plane + worker node model
-- **Quick Analogy**: Dock and cargo ships memory aid
-- **Docker vs Containerd**: Runtime differences and CRI
-- **Runtime CLI Tools**: ctr, nerdctl, crictl
+### Part 2: Workloads & Operations
+- [Pods](core-concepts-2.md#pods)
+- [Pods - Replication](core-concepts-2.md#pods---replication)
+- [Deployments](core-concepts-2.md#deployments)
+- [kubectl Commands](core-concepts-2.md#kubectl-commands)
+- [Services](core-concepts-2.md#services)
+- [Namespaces](core-concepts-2.md#namespaces)
 
-### Storage & State
-- **etcd**: Distributed key-value store for cluster state
-- **etcd in Kubernetes Deployments**: Manual vs kubeadm-based setups
-
-### Control Plane Components
-- **Kubernetes Architecture**: API Server overview
-- **Kube API Server**: Entry point for all cluster operations
-- **Kube Scheduler**: Pod assignment to nodes (Filter → Score → Bind)
-- **Kube Controller Manager**: Reconciliation loops for desired state
-
-### Worker Node Components
-- **Kubelet**: Node agent managing containers
-- **Kube-Proxy**: Service networking and routing (iptables/ipvs)
-
-### Key Concepts
-- **API Primitives**: Pods, Services, Deployments, ConfigMaps
-- **Service and Other Network Primitives**: Services, Ingress, Network Policies
+## Notes
+- The README is intentionally brief and serves as a directory index, not a content duplicate.
+- Add new topic files under `Notes/Kubernetes/` and reference them here with unique file names and anchors.
+- Use the headings in each file to create consistent anchor links for future expansions.
