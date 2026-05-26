@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-taint-toleration
+  labels:
+    app: nginx-taint
+spec:
+  containers:
+    - name: nginx
+      image: nginx:stable
+      ports:
+        - containerPort: 80
+  tolerations:
+    - key: "special"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
