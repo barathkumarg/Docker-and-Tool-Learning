@@ -9,6 +9,23 @@ Files:
 - `node-affinity-pod.yaml` — Pod uses node affinity for scheduling onto nodes with matching labels.
 - `pod-anti-affinity.yaml` — Pod uses pod anti-affinity to avoid colocating pods with the same `app` label on the same node.
 
+## Setup
+
+To use scheduling features effectively, you may want to create additional nodes in minikube:
+
+```bash
+# Create additional nodes in minikube
+minikube node add
+minikube node add --name minikube-m2
+minikube node add --name minikube-m3
+
+# List all nodes
+kubectl get nodes
+
+# Check minikube node status
+minikube node list
+```
+
 ## Concepts covered
 
 - Taints and Tolerations
@@ -21,6 +38,27 @@ Files:
 ## Taints and Tolerations
 
 Purpose: Prevent pods from being scheduled on certain nodes unless they have matching tolerations.
+
+Example YAML:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-taint-toleration
+  labels:
+    app: nginx-taint
+spec:
+  containers:
+    - name: nginx
+      image: nginx:stable
+      ports:
+        - containerPort: 80
+  tolerations:
+    - key: "special"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+```
 
 Commands:
 
@@ -49,6 +87,24 @@ kubectl taint nodes $(kubectl get nodes -o name | head -n 1) special=true:NoSche
 
 Purpose: Simple required scheduling filter based on node labels.
 
+Example YAML:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-node-selector
+  labels:
+    app: nginx-node-selector
+spec:
+  nodeSelector:
+    disktype: ssd
+  containers:
+    - name: nginx
+      image: nginx:stable
+      ports:
+        - containerPort: 80
+```
+
 Commands:
 
 ```bash
@@ -75,6 +131,31 @@ kubectl label nodes $(kubectl get nodes -o name | head -n 1) disktype-
 ## Node Affinity
 
 Purpose: More expressive rules for scheduling based on node attributes; supports required or preferred rules.
+
+Example YAML:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-node-affinity
+  labels:
+    app: nginx-node-affinity
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: disktype
+                operator: In
+                values:
+                  - ssd
+  containers:
+    - name: nginx
+      image: nginx:stable
+      ports:
+        - containerPort: 80
+```
 
 Commands:
 
@@ -106,6 +187,32 @@ kubectl label nodes $(kubectl get nodes -o name | head -n 1) disktype-
 ## Pod Anti-Affinity
 
 Purpose: Prevent pods with matching labels from running on the same topology domain (for example, the same node), improving availability.
+
+Example YAML:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod-anti-affinity
+  labels:
+    app: nginx
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - nginx
+          topologyKey: "kubernetes.io/hostname"
+  containers:
+    - name: nginx
+      image: nginx:stable
+      ports:
+        - containerPort: 80
+```
 
 Commands:
 

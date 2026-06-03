@@ -126,7 +126,7 @@ Note that the nginx now cannot be accessed since it is not exposed to the outsid
 ### Service YAML
 We use the services - cluster IP/Load balancer to expose the deployment to the outside world. We will learn about it in the next section.
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:

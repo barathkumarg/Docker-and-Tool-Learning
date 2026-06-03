@@ -5,6 +5,7 @@
 - <a href="#pods---replication">Pods - Replication</a>
 - <a href="#deployments">Deployments</a>
 - <a href="#services">Services</a>
+- <a href="#namespaces">Namespaces</a>
 
 ### Topic
 Deployments, ReplicaSets, Pods, and kubectl shorthand commands
@@ -437,3 +438,17 @@ metadata:
 
 ![](../../resources/images/kubernetes-core-concepts/imperative-command.png)
 
+
+## Pods vs Nodes vs Deployments vs Services vs Namespaces
+
+![alt text](../../resources/images/kubernetes-core-concepts/basic-concept.png)
+
+- Pods are the smallest deployable units that can be created and managed in Kubernetes. They encapsulate one or more containers, storage resources, a unique network IP, and options that govern how the container(s) should run.
+
+- Nodes are the worker machines in Kubernetes. They can be virtual or physical and run the pods. Each node has the services necessary to run pods and is managed by the master components.
+
+- Deployments are a higher-level abstraction that manages ReplicaSets and Pods. They provide declarative updates for Pods and ReplicaSets, allowing you to easily manage the lifecycle of your applications.
+
+- Services are an abstraction that defines a logical set of Pods and a policy by which to access them. They enable communication between different components of an application and with the outside world.
+
+- Namespaces are a way to divide cluster resources between multiple users. They provide a scope for names and are useful for organizing resources in a cluster, especially in larger environments with multiple teams or projects.
