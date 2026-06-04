@@ -2,23 +2,28 @@
 
 - Manual Scheduling
 - Labels and Selectors
-- Resource Limits
-- DaemonSets
-- Multiple Schedulers
-- Scheduler Events
-
+- Annotations
+- Taints and Tolerations
+- Node Selectors, Node Affinity, and Anti-Affinity
+- Node Affinity and Taint-Tolerations
 
 # Manual Scheduling
-### What is Manual Scheduling?
-  - Manually assigning a Pod to a specific node without relying on the Kubernetes scheduler.
-### Use Cases for Manual Scheduling:
-  - Testing and Debugging: Manually scheduling a Pod can help in testing specific node configurations or debugging issues related to node resources.
-  - Specialized Workloads: Certain workloads may require specific hardware or software configurations that are only available on certain nodes.
-  - Performance Optimization: Manually scheduling can help optimize performance by placing Pods on nodes with better resources or closer to data sources.
-  - Pod will be in `Pending` state until the specified node is available and has sufficient resources to run the Pod.
-### How to Manually Schedule a Pod:   
-  - Create a Pod manifest with the `nodeName` field set to the desired node's name.
-  - Use `nodeName` field in Pod spec to specify the node for scheduling.
+
+## What is Manual Scheduling?
+
+Manual scheduling means assigning a Pod to a specific node using the `nodeName` field, bypassing the default Kubernetes scheduler.
+
+## Use Cases
+
+- Testing and debugging node-specific behavior.
+- Scheduling workloads on nodes with special hardware or software.
+- Performance tuning by placing Pods on a node close to data or with better resources.
+- Running a Pod on a node that already has a reserved environment.
+
+## How to Manually Schedule a Pod
+
+Create a Pod manifest with the `nodeName` field set to the target node name.
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -30,42 +35,56 @@ spec:
     image: my-image
   nodeName: my-node
 ```
-### Considerations for Manual Scheduling:
-  - Manual scheduling bypasses the Kubernetes scheduler, so it may lead to resource contention if not managed carefully.
-  - It is important to ensure that the specified node has sufficient resources to run the Pod.
-  - Manual scheduling is not recommended for production environments as it can lead to maintenance challenges and reduced flexibility in workload management.
 
-### Commands
+## Considerations
+
+- Manual scheduling bypasses the Kubernetes scheduler.
+- It may cause resource contention if the target node is already busy.
+- The specified node must have enough resources for the Pod.
+- Manual scheduling is generally not recommended for production workloads.
+- If the node is unavailable or cannot accommodate the Pod, the Pod remains in `Pending`.
+
+## Commands
+
 ```bash
-# To view the status of a manually scheduled Pod:
+# View a manually scheduled Pod
 kubectl get pods my-pod -o wide
 
-# To view the status of the scheduler:
+# View scheduler-related Pods in kube-system
 kubectl get pods --namespace kube-system
 ```
 
-- **Why the kubectl apply not working for manual scheduling?**
-  - When you use `kubectl apply` to create or update a Pod with a specified `nodeName`, the Kubernetes scheduler will not automatically assign the Pod to a node. Instead, the Pod will be in a `Pending` state until the specified node is available and has sufficient resources to run the Pod. This is because manual scheduling bypasses the Kubernetes scheduler, and it relies on the user to ensure that the specified node can accommodate the Pod's resource requirements.
+## Notes
+
+- `kubectl apply` does work for a Pod with `nodeName`, but the Pod will stay `Pending` until the specified node is available and has sufficient resources.
+- Manual scheduling relies on the user to ensure the node can run the Pod.
 
 # Labels and Selectors
-### What are Labels and Selectors?
-  - Labels are key-value pairs attached to Kubernetes objects (like Pods, Services, etc.) that are used to organize and select subsets of objects.
-  - Selectors are queries that allow you to filter and select objects based on their labels.
-### Use Cases for Labels and Selectors:
-  - Organizing Resources: Labels help in categorizing and organizing resources based on attributes like environment
 
-  - Can find the labels in the pod as below:
+## What are Labels and Selectors?
+
+- Labels are key-value pairs attached to Kubernetes objects.
+- Selectors are queries used to find objects based on labels.
+
+## Use Cases
+
+- Organize resources by environment, app, tier, or team.
+- Filter objects for Services, ReplicaSets, and Deployments.
+- Select subsets of Pods for management or monitoring.
+
+## Examples
+
 ```bash
-# To view the labels of a Pod:
+# View labels for a Pod
 kubectl get pods my-pod --show-labels
 
-# Filter the pods with specific label:
+# Filter Pods by label
 kubectl get pods -l app=my-app
 
-# To view the objects using the selector
+# View all objects matching a selector
 kubectl get all --selector env=production
 ```
-  - YAML example of labels and selectors:
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -74,10 +93,14 @@ metadata:
   labels:
     app: my-app
     environment: production
-...
+spec:
+  containers:
+  - name: my-container
+    image: my-image
 ```
-- **How to Use Labels and Selectors:**
-  - You can use labels to group resources and selectors to query those groups. For example, you can create a Service that selects Pods with a specific label:
+
+## ReplicaSet Example
+
 ```yaml
 apiVersion: v1
 kind: ReplicaSet
@@ -99,43 +122,71 @@ spec:
         image: my-image
 ```
 
-- Here the `selector` is used to select Pods with the label `app: my-app`, and the `template` defines the labels that will be applied to the Pods created by the ReplicaSet. Hence the pod eith `app: my-app` and `function: backend` labels will be created as the replica set.
+The `selector` matches Pods with `app: my-app`, while the ReplicaSet template defines the labels assigned to new Pods.
 
-## Annotations  
-### What are Annotations?
-  - Annotations are key-value pairs that can be attached to Kubernetes objects to store arbitrary metadata. Unlike labels, annotations are not used for selection or grouping but can be used to store information that may be useful for tools and libraries.
-### Use Cases for Annotations:
-  - Storing Metadata: Annotations can be used to store additional information about an object, such as build information, deployment details, or any other custom data that may be relevant to the object
-  e.g., `kubectl.kubernetes.io/last-applied-configuration` annotation stores the last applied configuration of an object when using `kubectl apply`.
-  - Tooling and Automation: Annotations can be used by tools and automation scripts to store information that may be needed for processing or decision-making.
-### How to Use Annotations:
-  - You can add annotations to Kubernetes objects in the metadata section of the object definition. For example:
-```yamlapiVersion: v1
+# Annotations
+
+## What are Annotations?
+
+Annotations are key-value pairs attached to Kubernetes objects to store metadata that is not used for selection.
+
+## Use Cases
+
+- Store build, deployment, or audit metadata.
+- Attach tool-specific or automation metadata.
+- Preserve configuration details used by tools like `kubectl`.
+
+## Example
+
+```yaml
+apiVersion: v1
 kind: Pod
 metadata:
-  name: my-pod    
+  name: my-pod
   annotations:
     description: "This is a sample pod for demonstration purposes."
     owner: "team-a"
 spec:
+  containers:
+  - name: my-container
+    image: my-image
 ```
 
 # Taints and Tolerations
-### What are Taints and Tolerations?  
-  - Taints and tolerations are mechanisms in Kubernetes that allow you to control which Pods can be scheduled on which nodes. Taints are applied to nodes, while tolerations are applied to Pods.
-### Use Cases for Taints and Tolerations:
-  - Node Isolation: Taints can be used to isolate certain nodes for specific workloads, ensuring that only Pods with the appropriate tolerations can be scheduled on those nodes.
-  - Resource Management: Taints can help manage resources by preventing certain Pods from being scheduled on nodes that are reserved for specific workloads or have limited resources.
 
-  - `Taint` are applied on the nodes level, prevents the pods from scheduling on the node unless the pod has a matching `toleration`. Taints have three components: key, value, and effect. The effect can be `NoSchedule`, `PreferNoSchedule`, or `NoExecute`.
-  - `Toleration` are applied on the pod level, allows the pod to be scheduled on nodes with matching taints. Tolerations have three components: key, operator, and value. The operator can be `Equal` or `Exists`.
+## What are Taints and Tolerations?
 
-### How to Use Taints and Tolerations:
-  - To add a taint to a node, you can use the following
+- Taints are applied to nodes to repel Pods.
+- Tolerations are applied to Pods to allow them onto tainted nodes.
+
+## Use Cases
+
+- Isolate nodes for special workloads.
+- Reserve nodes for dedicated applications.
+- Keep general workloads off control-plane or specialized nodes.
+
+## Taint and Toleration Components
+
+- Taint: `key`, `value`, `effect`
+- Effects: `NoSchedule`, `PreferNoSchedule`, `NoExecute`
+- Toleration: `key`, `operator`, `value`, `effect`
+- Operators: `Equal`, `Exists`
+
+## Commands
+
 ```bash
+# Add a taint to a node
 kubectl taint nodes <node-name> key=value:effect
+
+# View taints on a node
+kubectl describe node <node-name> | grep -i taints
+
+# Remove a taint from a node
+kubectl taint nodes <node-name> key=value:effect-
 ```
-  - To add a toleration to a Pod, you can include it in the Pod specification:
+
+## Pod Toleration Example
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -147,63 +198,51 @@ spec:
     operator: "Equal"
     value: "value"
     effect: "NoSchedule"
+  containers:
+  - name: my-container
+    image: my-image
 ```
 
-- To view the taints on a node, you can use the following command:
-```bash
-kubectl describe node <node-name> | grep -i taints
-```
+## Notes
 
-- Command to untaint a node:
-```bash
-# `Add` minus sign (-) at the end of the taint to remove it from the node
-kubectl taint nodes <node-name> key=value:effect-
-```
-
-### Important Notes:
-  - It never guarantees that the pod will be scheduled on the node with the matching taint, it only allows the pod to be scheduled on that node if there are no other nodes available that do not have the taint.
-  - `Master Node` is tainted by default to prevent scheduling of regular pods on it. The taint is `node-role.kubernetes.io/master:NoSchedule`, which means that only pods with a toleration for this taint can be scheduled on the master node. This is done to ensure that the master node is reserved for running critical control plane components and is not used for running regular application workloads.
+- A toleration does not guarantee scheduling on a node; it only allows the Pod to be eligible for matching tainted nodes.
+- Control-plane nodes are typically tainted with `node-role.kubernetes.io/master:NoSchedule`.
 
 # Node Selectors, Node Affinity, and Anti-Affinity
 
-### What are Node Selectors, Node Affinity, and Anti-Affinity?
-  - Node Selectors, Node Affinity, and Anti-Affinity are mechanisms in Kubernetes that allow you to control the scheduling of Pods based on node attributes and preferences.
-### Use Cases for Node Selectors, Node Affinity, and Anti-Affinity:
-  - Node Selectors:
-    - Used for simple scheduling requirements where you want to schedule Pods on nodes with specific labels.
-  - Node Affinity:
-    - Used for more complex scheduling requirements where you want to specify rules for how Pods should be scheduled based on node attributes, such as preferred or required node labels.
-  - Anti-Affinity:
-    - Used to prevent Pods from being scheduled on the same node or in the same topology domain, which can help improve availability and reduce the risk of failure.
-### How to Use Node Selectors, Node Affinity, and Anti-Affinity:
-#### Node Selectors:
+## What are Node Selectors, Node Affinity, and Anti-Affinity?
 
-  - Pod yaml file with node selector:
+- Node Selector: simple label-based node selection.
+- Node Affinity: expressive node selection rules.
+- Anti-Affinity: rules to avoid scheduling Pods together.
+
+## Use Cases
+
+- Node Selector: schedule Pods on nodes with a specific label.
+- Node Affinity: specify preferred or required node attributes.
+- Pod Anti-Affinity: spread replicas across nodes or failure domains.
+
+## Node Selector Example
+
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
   name: my-pod
-spec: 
+spec:
   nodeSelector:
     disktype: ssd
-```
-  - Apply the label to the node:
-```bash
-kubectl label nodes <node-name> disktype=ssd `
-```
-  - Node yaml file with node selector:
-```yaml
-apiVersion: v1
-kind: Node
-metadata:
-  name: my-node
-  labels:
-    disktype: ssd
+  containers:
+  - name: my-container
+    image: my-image
 ```
 
-#### Node Affinity:
-  - Pod yaml file with node affinity:
+```bash
+kubectl label nodes <node-name> disktype=ssd
+```
+
+## Node Affinity Example
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -219,18 +258,27 @@ spec:
             operator: In
             values:
             - ssd
+  containers:
+  - name: my-container
+    image: my-image
 ```
-- Operators : `exists`, `doesNotExist`, `in`, `notIn`, `gt`, `lt`
 
-- What if no Nodes match the Node Affinity rules? What if pod label changed ?
+## Node Affinity Operators
 
-**Node Affnity Types**:
-  - `requiredDuringSchedulingIgnoredDuringExecution`: The Pod will only be scheduled on nodes that match the specified affinity rules. If no nodes match, the Pod will remain in a `Pending` state until a suitable node becomes available. If the Pod is already running and the node's labels change such that it no longer matches the affinity rules, the Pod will continue to run on that node until it is evicted or deleted, but it will not be rescheduled to another node that matches the affinity rules.
+- `Exists`
+- `DoesNotExist`
+- `In`
+- `NotIn`
+- `Gt`
+- `Lt`
 
-  - `preferredDuringSchedulingIgnoredDuringExecution`: The scheduler will try to schedule the Pod on nodes that match the specified affinity rules, but if no such nodes are available, it will schedule the Pod on any available node. If the Pod is already running and the node's labels change such that it no longer matches the affinity rules, the Pod will continue to run on that node until it is evicted or deleted, but it will not be rescheduled to another node that matches the affinity rules.
+## Behavior
 
-#### Anti-Affinity:
-  - Pod yaml file with anti-affinity:
+- If no nodes match required affinity, the Pod stays `Pending`.
+- If labels change after scheduling, the Pod continues running until evicted or deleted.
+
+## Anti-Affinity Example
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -247,135 +295,168 @@ spec:
             values:
             - my-app
         topologyKey: "kubernetes.io/hostname"
+  containers:
+  - name: my-container
+    image: my-image
 ```
 
-## Node affinity and Taint-Tolerations
+# Node Affinity and Taint-Tolerations
 
-- Both the Taint/Node Affinity does not guarantee the respective node/pod will be scheduled on the node/pod with the matching taint/affinity, it only allows the pod to be scheduled on that node if there are no other nodes available that do not have the taint/affinity.
-- But apply the both taint and node affinity on the same node, it will guarantee that the pod will be scheduled on the node with the matching taint and affinity, because the pod will only be scheduled on nodes that match the specified affinity rules and have the matching taint. If no such nodes are available, the Pod will remain in a `Pending` state until a suitable node becomes available. If the Pod is already running and the node's labels change such that it no longer matches the affinity rules or taint, the Pod will continue to run on that node until it is evicted or deleted, but it will not be rescheduled to another node that matches the affinity rules or taint.
+- Taints and node affinity both affect scheduling, but neither alone guarantees placement.
+- A Pod must satisfy both the node affinity and the taint toleration to be scheduled on a matching tainted node.
+- If no suitable node exists, the Pod remains `Pending`.
 
-e.g:
 ```bash
 # Add a taint to the node
 kubectl taint nodes <node-name> key=value:NoSchedule
+
+# Label the node for affinity
 kubectl label nodes <node-name> disktype=ssd
 ```
-```yaml 
-apiVersion: v1
-kind: Pod
-metadata:
-  name: my-pod
-spec:
-    tolerations:
-    - key: "key"
-        operator: "Equal"
-        value: "value"
-        effect: "NoSchedule"
-    affinity:
-        nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-            - key: disktype
-                operator: In
-                values:
-                - ssd
- ```    
 
-# Resources Requirements
-### What are Resource Requests and Limits?
-  - Resource Requests and Limits are mechanisms in Kubernetes that allow you to specify the minimum and maximum amount of CPU and memory resources that a container can use. Resource Requests are used by the Kubernetes scheduler to determine which node to schedule a Pod on, while Resource Limits are used to enforce resource usage constraints on running containers.
-
-### Use Cases for Resource Requests and Limits:
-    - Resource Requests:
-        - Used to ensure that a Pod is scheduled on a node that has enough resources to run the container.
-    - Resource Limits:
-        - Used to prevent a container from consuming too many resources and affecting the performance of other containers running on the same node.
-
-### Sample yaml
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
   name: my-pod
 spec:
-    containers:
-    - name: my-container
-        image: my-image
-        resources:
-        requests:
-            memory: "64Mi"
-            cpu: "250m"
-        limits:
-            memory: "128Mi"
-            cpu: "500m"
- ```
+  tolerations:
+  - key: "key"
+    operator: "Equal"
+    value: "value"
+    effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: disktype
+            operator: In
+            values:
+            - ssd
+  containers:
+  - name: my-container
+    image: my-image
+```
 
+# Resource Requirements
 
-### Constraint - CPU and Memory
-- CPU: CPU resources are measured in CPU units, where 1 CPU unit is equivalent to 1 core of a CPU. For example, if you specify a resource request of `0.5` for CPU, it means that the container requires half of a CPU core to run. If you specify a resource limit of `1`, it means that the container can use up to one full CPU core.
-- Memory: Memory resources are measured in bytes, and you can specify them using standard Kubernetes resource quantity formats, such as `Mi` for mebibytes and `Gi` for gibibytes. For example, if you specify a resource request of `64Mi` for memory, it means that the container requires 64 mebibytes of memory to run. If you specify a resource limit of `128Mi`, it means that the container can use up to 128 mebibytes of memory.
+## What are Resource Requests and Limits?
 
-### Behaviour of Resource Requests and Limits:
-- When no request and limit been configured **(Not preferred)**
-    - The container can use as much CPU and memory as the node has available, which can lead to resource contention and performance issues for other containers running on the same node.
-- When only resource requests are configured **(Not preferred)**
-    - The container will be scheduled on a node that has enough resources to meet the specified requests, but it can use more resources than the requested amount if they are available on the node. This can lead to resource contention and performance issues for other containers running on the same node if the container uses more resources than it requested.
-- When only resource limits are configured **(Not preferred)**
-  - resources == limit
-  - The container can be scheduled on any node, but it will be limited to using the specified amount of resources. If the container tries to use more resources than the specified limit, it will be throttled or terminated, which can lead to performance issues for the container and other containers running on the same node.
-  
-- When both resource requests and limits are configured **(Preferred)**
-    - The container will be scheduled on a node that has enough resources to meet the specified requests, and it will be limited to using the specified amount of resources. This helps to ensure that the container has the resources it needs to run while also preventing it from consuming too many resources and affecting the performance of other containers running on the same node.
+Resource Requests and Limits let you specify the minimum and maximum CPU and memory a container can use.
 
+- Requests: used by the scheduler to choose a node.
+- Limits: enforce runtime usage constraints.
 
-### Note:
-- If it exceeds the memory results in `Out of Memory (OOM)` and the container will be terminated, while if it exceeds the CPU limit, it will be throttled and the performance of the container will be affected, but it will not be terminated. 
+## Use Cases
 
-## Limit Range
-- Object on the Namespace level, it can replicated the default resource requests and limits for all the pods in the namespace, if the pod does not specify any resource requests and limits, it will use the default values from the Limit Range object. If the pod specifies resource requests and limits, it will override the default values from the Limit Range object.
+- Requests ensure the Pod is scheduled on a node with enough resources.
+- Limits prevent a container from using too much CPU or memory.
 
-- Sample yaml for Limit Range:
+## Example
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: my-container
+    image: my-image
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+```
+
+## Constraints: CPU and Memory
+
+- CPU is measured in CPU units where `1` CPU equals one core. A request of `0.5` means half a CPU core.
+- Memory is measured in bytes, using units like `Mi` and `Gi`.
+
+## Behavior of Resource Requests and Limits
+
+- No requests or limits configured:
+  - The container may use any available resources on the node, which can cause contention and instability.
+- Only requests configured:
+  - The scheduler reserves the requested resources, but the container may still use more if available.
+- Only limits configured:
+  - The container is limited at runtime but may be scheduled without guaranteed reserved capacity.
+- Both requests and limits configured:
+  - Preferred setup. The Pod is scheduled with reserved resources and limited to the configured maximum.
+
+## Notes
+
+- Exceeding the memory limit may trigger an OOM kill and terminate the container.
+- Exceeding the CPU limit will throttle the container, reducing performance but not terminating it.
+ 
+
+## LimitRange
+
+LimitRange is a namespace-level object that defines default resource requests and limits for Pods and containers in that namespace.
+
+- If a Pod does not specify requests or limits, Kubernetes may apply the defaults from the LimitRange.
+- If a Pod specifies requests or limits, those values override the defaults.
+
+### Example LimitRange
+
 ```yaml
 apiVersion: v1
 kind: LimitRange
 metadata:
   name: my-limit-range
 spec:
-    limits:
-    - default:
-        cpu: "500m"
-        memory: "256Mi"
-        defaultRequest:
-        cpu: "250m"
-        memory: "128Mi"
-        type: Container
-  ```
-- Apply on the namespace:
-```bash 
+  limits:
+  - type: Container
+    default:
+      cpu: "500m"
+      memory: "256Mi"
+    defaultRequest:
+      cpu: "250m"
+      memory: "128Mi"
+```
+
+### Apply to a Namespace
+
+```bash
 kubectl apply -f limit-range.yaml -n my-namespace
 ```
 
 ## Resource Quota
-- Object on the Namespace level, it can limit the total amount of resources that can be used by all the pods in the namespace. It can also limit the number of pods that can be created in the namespace. If a pod tries to use more resources than the specified quota, it will be rejected by the Kubernetes API server.
 
-- Sample yaml for Resource Quota:
+ResourceQuota is a namespace-level object that limits the total resources consumed by all objects in the namespace.
+
+- It can limit CPU, memory, number of Pods, and other resource types.
+- If a Pod requests more resources than the quota allows, the API server rejects it.
+
+### Example ResourceQuota
+
 ```yaml
 apiVersion: v1
 kind: ResourceQuota
 metadata:
   name: my-resource-quota
 spec:
-    hard:
-    request.cpu: "2"
-    request.memory: "4Gi"
+  hard:
+    requests.cpu: "2"
+    requests.memory: "4Gi"
     pods: "10"
-  ```
+```
 
-# DeamonSets
-- A DaemonSet ensures that all (or some) Nodes run a copy of a Pod. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected. Deleting a DaemonSet will clean up the Pods it created.
+# DaemonSets
 
-- Sample yaml for DaemonSet:
+A DaemonSet ensures that all (or selected) nodes run a copy of a Pod.
+
+- As nodes are added, Pods are added.
+- As nodes are removed, Pods are garbage collected.
+- Deleting the DaemonSet removes the Pods it created.
+
+### Example DaemonSet
+
 ```yaml
 apiVersion: apps/v1
 kind: DaemonSet
@@ -395,5 +476,98 @@ spec:
         image: my-image
 ```
 
-- It uses the NodeSelector to schedule the pods on the nodes with the label `app: my-daemonset`, so it will ensure that a copy of the Pod is running on each node that has the label `app: my-daemonset`. If a node does not have the label, the DaemonSet will not schedule a Pod on that node.
+### DaemonSet Notes
 
+- A DaemonSet creates a Pod on each matching node.
+- If a node does not match the selector, the DaemonSet does not schedule a Pod there.
+
+### Commands
+
+```bash
+# List DaemonSets in the current namespace
+kubectl get daemonsets
+
+# Describe a specific DaemonSet
+kubectl describe daemonset my-daemonset
+```
+
+# Static Pods
+
+Static Pods are managed directly by the kubelet on a specific node, not by the Kubernetes control plane scheduler.
+
+- Static Pods are defined by manifest files on the node, typically under `/etc/kubernetes/manifests`.
+- The kubelet monitors that directory and creates or removes Pods based on manifest files.
+- Static Pods are often used for critical control-plane components or system agents.
+
+## Control Plane Note
+
+The control plane includes the API server, controller manager, scheduler, and etcd. It maintains cluster state and schedules Pods.
+
+## Kubelet Configuration
+
+- `kube-service.yaml` typically includes `--pod-manifest-path=/etc/kubernetes/manifests`.
+- `kubeconfig.yaml` typically includes `--kubeconfig=/etc/kubernetes/kubeconfig`.
+
+## Mirror Pods
+
+- When a static Pod is created by the kubelet, the API server creates a mirror Pod object with the same name.
+- Mirror Pods are labeled with `kubernetes.io/config.mirror`.
+- Mirror Pods provide visibility for static Pods through standard Kubernetes tools.
+
+## Static Pod Behavior
+
+- Static Pods are not managed by controllers such as ReplicaSet, DaemonSet, or StatefulSet.
+- To run multiple static Pods, create separate manifest files with unique names.
+- Delete a static Pod by removing its manifest file; the kubelet deletes the corresponding mirror Pod.
+
+## Commands
+
+```bash
+# List static Pods on the node
+docker ps --filter "label=kubernetes.io/config.mirror"
+
+# Inspect a static Pod container
+docker inspect <container-id>
+```
+
+```bash
+# Identify the mirror Pod for a static Pod
+kubectl get pods --all-namespaces -o wide --field-selector spec.nodeName=<node-name> -l kubernetes.io/config.mirror
+```
+
+## Additional Static Pod Commands
+
+```bash
+# View static Pods via kubectl
+kubectl get pods --all-namespaces -o wide --field-selector spec.nodeName=<node-name>
+```
+
+```bash
+# Create a static Pod by placing a manifest on the node
+cat <<EOF | sudo tee /etc/kubernetes/manifests/my-static-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-static-pod
+spec:
+  containers:
+  - name: my-container
+    image: my-image
+EOF
+```
+
+```bash
+# Delete a static Pod by removing its manifest
+sudo rm /etc/kubernetes/manifests/my-static-pod.yaml
+## Static Pod Steps
+
+1. Create a static Pod manifest file on the node's filesystem, typically in `/etc/kubernetes/manifests`.
+2. The kubelet detects the manifest and creates the static Pod on the node.
+3. The kubelet also creates a mirror Pod in the Kubernetes API server for visibility.
+4. To delete the static Pod, remove its manifest file; the kubelet deletes the mirror Pod.
+
+## Static Pod vs DaemonSet
+
+- A DaemonSet is a Kubernetes controller that ensures a Pod runs on all (or some) nodes.
+- A static Pod is managed directly by the kubelet on a specific node and is not controlled by the API server.
+- Static Pods are often used for critical system components; DaemonSets are used for node-level workload distribution.
