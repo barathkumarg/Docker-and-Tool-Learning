@@ -571,3 +571,181 @@ sudo rm /etc/kubernetes/manifests/my-static-pod.yaml
 - A DaemonSet is a Kubernetes controller that ensures a Pod runs on all (or some) nodes.
 - A static Pod is managed directly by the kubelet on a specific node and is not controlled by the API server.
 - Static Pods are often used for critical system components; DaemonSets are used for node-level workload distribution.
+```
+
+# Priority Classes
+
+- Priority Classes allow you to assign a priority level to Pods, influencing the order in which they are scheduled and evicted.
+- Higher priority Pods are scheduled before lower priority ones and are less likely to be evicted during resource contention.
+
+- Higher value means higher priority. The default priority is `0`. System-critical Pods often have a priority of `1000000` or more. Lower values indicate lower priority, and negative values can be used for best-effort workloads.Range: -1000000 to 1000000.
+
+## Scenarios for Using Priority Classes
+- Ensuring critical system components are scheduled before user workloads.
+- Prioritizing important applications during resource contention.
+
+## What if higher priority Pods cannot be scheduled?
+- If a higher priority Pod cannot be scheduled due to resource constraints, the scheduler may preempt lower priority Pods to free up resources. Preempted Pods are evicted and may be rescheduled later when resources become available.
+
+- When `preemptionPolicy` is set to `PreemptLowerPriority`, the scheduler will attempt to preempt lower priority Pods to make room for the higher priority Pod. If `preemptionPolicy` is set to `Never`, the scheduler will not preempt any Pods, and the higher priority Pod will remain in a `Pending` state until resources become available.
+
+- Priority class object creation
+```yaml
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000000
+globalDefault: false # Optional, if true, this PriorityClass is the default for Pods that do not specify a priority class.
+preemptionPolicy: PreemptLowerPriority # Optional, default is PreemptLowerPriority. Set to Never to disable preemption for this priority class.
+description: "This priority class is for high-priority Pods."
+```
+- Assigning a priority class to a Pod
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  priorityClassName: high-priority
+  containers: 
+  - name: my-container
+    image: my-image
+``` 
+
+## Commands to manage Priority Classes
+```bash
+# Create a PriorityClass
+kubectl apply -f priority-class.yaml
+
+# List PriorityClasses
+kubectl get priorityclasses
+
+# Describe a specific PriorityClass
+kubectl describe priorityclass high-priority
+
+# Delete a PriorityClass
+kubectl delete priorityclass high-priority
+
+# View Pods with their priority classes
+kubectl get pods -o custom-columns=NAME:.metadata.name,PRIORITY:.spec.priorityClassName
+``` 
+
+# Multiple Schedulers
+
+- Kubernetes allows you to run multiple schedulers in a cluster, each responsible for scheduling different sets of Pods based on specific criteria.
+
+- Role of a Scheduler: A scheduler is responsible for assigning Pods to nodes based on resource availability and scheduling policies. The default scheduler is `kube-scheduler`, but you can deploy custom schedulers for specialized scheduling needs.
+
+- Use Cases for Multiple Schedulers:
+  - Specialized scheduling for specific workloads (e.g., GPU workloads, high-priority tasks).
+  - Custom scheduling algorithms that differ from the default scheduler.
+  - Isolation of scheduling responsibilities for different teams or applications.
+
+## How to Deploy Multiple Schedulers:
+1. Create a custom scheduler deployment with a unique name and label.
+2. Configure the custom scheduler to watch for Pods with a specific `schedulerName` in their spec.
+3. Create Pods that specify the custom scheduler in their `schedulerName` field.
+
+- Example of a custom scheduler deployment:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: custom-scheduler
+  command:
+    - kube-scheduler
+    - address= 127.0.0.1
+    - --kubeconfig=/etc/kubernetes/scheduler.conf
+    - config=/etc/kubernetes/scheduler-config.yaml
+    image: k8s.gcr.io/kube-scheduler:v1.24.0
+    name: custom-scheduler
+   ...
+```
+
+- Example myscheduler-config.yaml:
+```yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: custom-scheduler
+leaderElection:
+  leaderElect: true
+```
+
+- `leaderElection` is important for high availability. It ensures that if the active scheduler fails, another instance can take over without scheduling conflicts. If the value set to `true`, the scheduler will participate in leader election, allowing for high availability. If set to `false`, the scheduler will not participate in leader election, and if it fails, there will be no failover mechanism in place.
+
+- `Note`: Another way to create was from the kube-scheduler binary, but the above method is more common in production environments.
+
+
+- Usage of custom scheduler in a Pod:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  schedulerName: custom-scheduler
+  containers:
+  - name: my-container
+    image: my-image
+```
+
+## Commands to manage multiple schedulers:
+```bash
+# List all schedulers in the cluster
+kubectl get pods -n kube-system -l component=kube-scheduler
+
+# Describe a specific scheduler
+kubectl describe pod <scheduler-pod-name> -n kube-system
+
+# View Pods scheduled by a specific scheduler
+kubectl get pods -o wide --field-selector spec.schedulerName=custom-scheduler
+```
+# Scheduler Profiles
+
+- Scheduler profiles allow you to define multiple scheduling policies within a single scheduler instance. Each profile can have its own set of plugins and rules for scheduling Pods.
+
+- Consider the the pod to be scheduled in the node, undergoes a series of steps:
+
+1. **Filtering**: The scheduler filters out nodes that do not meet the Pod's requirements (e.g., resource requests, node selectors).
+  Plugins involved: `NodeResourcesFit`, `NodeSelector`, `TaintToleration`, etc.
+
+2. **Scoring**: The scheduler scores the remaining nodes based on various criteria (e.g., resource availability, affinity rules).
+  Plugins involved: `NodeResourcesLeastAllocated`, `NodeAffinity`, `PodAffinity`, etc
+
+3. **Binding**: The scheduler binds the Pod to the selected node.
+  Plugin involved: `DefaultBinder`  
+
+- Use Cases for Scheduler Profiles:
+  - Different scheduling policies for different types of workloads (e.g., high-priority vs. best-effort).
+  - Testing new scheduling algorithms without affecting the default scheduler.
+  - Custom scheduling for specific teams or applications.
+
+## Example of a scheduler configuration with multiple profiles:
+```yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: default-scheduler
+  plugins:
+    filter:
+      enabled:
+      - name: NodeResourcesFit
+    score:
+      enabled:
+      - name: NodeResourcesLeastAllocated
+- schedulerName: custom-scheduler
+  plugins:  
+    filter:
+      enabled:
+      - name: NodeSelector
+    score:
+      enabled:
+      - name: NodeAffinity
+```
