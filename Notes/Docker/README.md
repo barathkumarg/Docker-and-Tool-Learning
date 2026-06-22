@@ -45,59 +45,254 @@ Use these resources after your local notes. They are official documentation or o
 
 ## Topics to learn next - Intermediate level
 
-### 1. Dockerfile best practices
-- Write production-ready Dockerfiles using small base images.
-- Use multi-stage builds to reduce final image size.
-- Understand layer caching and how instruction order affects build speed.
-- Run containers as a non-root user.
-- Use `.dockerignore` to avoid copying unnecessary files into images.
+### Learning Roadmap
 
-### 2. Image optimization and build tooling
-- Compare Alpine, slim, distroless, and full base images.
-- Scan image size and remove unused build dependencies.
-- Use Docker BuildKit for faster and cleaner builds.
-- Learn `docker buildx` for multi-platform images like `linux/amd64` and `linux/arm64`.
-- Tag images properly using semantic versions and Git commit hashes.
+This roadmap is organized in **4 phases** with increasing complexity. Complete each phase sequentially to build a solid intermediate foundation.
 
-### 3. Docker Compose beyond basics
-- Use multiple Compose files for dev, test, and production-like environments.
-- Work with environment variables and `.env` files.
-- Add health checks and dependency startup conditions.
-- Use named volumes for persistent data.
-- Create isolated networks for frontend, backend, database, and monitoring services.
+---
 
-### 4. Container networking
-- Understand bridge, host, none, overlay, and macvlan networks.
-- Learn container DNS and service discovery.
-- Expose ports safely and understand port mapping.
-- Debug connectivity using `docker exec`, `curl`, `ping`, `ss`, and logs.
-- Know when to use internal-only networks.
+## Phase 1: Production-Ready Images (Weeks 1-2)
 
-### 5. Storage and persistence
-- Understand bind mounts vs named volumes.
-- Use volumes for databases and application uploads.
-- Back up and restore Docker volumes.
-- Manage permissions between host users and container users.
-- Avoid storing state inside containers.
+### 1.1 Dockerfile Best Practices
+**Goal**: Write production-ready, optimized Dockerfiles
 
-### 6. Security fundamentals
-- Run containers with least privilege.
-- Avoid running processes as root.
-- Use read-only filesystems where possible.
-- Manage secrets without hardcoding them into images.
-- Scan images using tools like Docker Scout or Trivy.
-- Understand image signing and trusted registries at a high level.
+**Topics**:
+- Write Dockerfiles using small base images (Alpine, slim, distroless)
+- Understand layer caching and instruction ordering for build speed
+- Use multi-stage builds to reduce final image size
+- Run containers as non-root user for security
+- Use `.dockerignore` to exclude unnecessary files
+- Order instructions to maximize cache hit rate
 
-### 7. Registries and release workflow
-- Push and pull images from Docker Hub or a private registry.
-- Use image tags properly: `latest`, version tags, and commit-based tags.
-- Create a basic release workflow from source code to image registry.
-- Clean up unused local images, containers, networks, and volumes safely.
+**Practice**:
+- [Refactor existing Dockerfile to use multi-stage builds](../../src/docker/2.docker-image/README.md)
+- Create a Dockerfile with non-root user and compare image sizes
 
-### 8. Observability and debugging
-- Read container logs using `docker logs`.
-- Inspect containers using `docker inspect`.
-- Monitor resource usage with `docker stats`.
+**Resources**:
+- [Dockerfile best practices](https://docs.docker.com/build/building/best-practices/)
+- [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/)
+- [Use the BUILDKIT](https://docs.docker.com/build/buildkit/)
+
+---
+
+### 1.2 Image Optimization and BuildKit
+**Goal**: Build faster, smaller, more efficient images
+
+**Topics**:
+- Compare base images: Alpine vs Slim vs Distroless vs Full
+- Scan and analyze image size layers
+- Remove unused build dependencies and clean up caches
+- Use Docker BuildKit for faster builds and advanced features
+- Use `docker buildx` for multi-platform builds (`linux/amd64`, `linux/arm64`)
+- Implement semantic versioning and tag strategy
+
+**Practice**:
+- Build same app with Alpine and distroless, compare sizes
+- Set up BuildKit and test build speed improvements
+- Create multi-platform build for both amd64 and arm64
+
+**Resources**:
+- [BuildKit documentation](https://docs.docker.com/build/buildkit/)
+- [Multi-platform builds](https://docs.docker.com/build/building/multi-platform/)
+- [Build cache optimization](https://docs.docker.com/build/cache/optimize/)
+- [Image tagging best practices](https://docs.docker.com/reference/cli/docker/image/tag/)
+
+---
+
+## Phase 2: Advanced Composition & Networking (Weeks 3-4)
+
+### 2.1 Docker Compose Beyond Basics
+**Goal**: Manage complex multi-container applications
+
+**Topics**:
+- Use multiple Compose files for different environments (dev, test, prod)
+- Work with environment variables and `.env` files
+- Implement health checks (`healthcheck` directive)
+- Control startup order with `depends_on` and wait conditions
+- Use named volumes vs bind mounts strategically
+- Create isolated networks for service segmentation
+- Override services for different deployment scenarios
+
+**Practice**:
+- Create dev, test, and prod Compose files for a 3-tier app
+- Implement health checks for web and database services
+- Set up `.env` file with environment-specific variables
+- Use volume backups and restoration
+
+**Resources**:
+- [Compose file reference](https://docs.docker.com/reference/compose-file/)
+- [Compose documentation](https://docs.docker.com/compose/)
+- [Control startup and shutdown order](https://docs.docker.com/compose/how-tos/startup-order/)
+- [Networking in Compose](https://docs.docker.com/compose/networking/)
+
+---
+
+### 2.2 Container Networking Deep Dive
+**Goal**: Master network types and service communication
+
+**Topics**:
+- Understand network drivers: bridge, host, none, overlay, macvlan
+- Container DNS and service discovery (hostname resolution)
+- Port mapping and exposure strategies
+- Debug connectivity issues using `docker exec`, `curl`, `ping`, `ss`, `nslookup`
+- Understand when to use isolated networks
+- Network policies and access control basics
+
+**Practice**:
+- Create custom bridge network and test service discovery
+- Debug connectivity between containers
+- Map and expose ports safely
+- Use host network mode and understand trade-offs
+
+**Resources**:
+- [Docker networking overview](https://docs.docker.com/engine/network/)
+- [Network drivers](https://docs.docker.com/engine/network/drivers/)
+- [Port publishing and mapping](https://docs.docker.com/engine/network/port-publishing/)
+- [Service discovery and DNS](https://docs.docker.com/engine/network/drivers/bridge/#embedded-dns-server)
+
+---
+
+## Phase 3: Data Persistence & Security (Weeks 5-6)
+
+### 3.1 Storage and Persistence
+**Goal**: Manage data safely across container lifecycle
+
+**Topics**:
+- Understand volumes vs bind mounts vs tmpfs mounts
+- Use named volumes for databases and stateful apps
+- Bind mounts for development workflows
+- Back up and restore Docker volumes
+- Manage file permissions between host and container users
+- Avoid storing state in containers (stateless design)
+- Volume driver plugins and advanced storage options
+
+**Practice**:
+- Create named volume for PostgreSQL database
+- Back up and restore volume data
+- Set up bind mount for live code reload in development
+- Test permission issues and solutions
+
+**Resources**:
+- [Docker volumes guide](https://docs.docker.com/engine/storage/volumes/)
+- [Bind mounts](https://docs.docker.com/engine/storage/bind-mounts/)
+- [Storage drivers](https://docs.docker.com/engine/storage/drivers/)
+- [Volume backup and restore](https://docs.docker.com/engine/storage/volumes/#backup-restore-or-migrate-data-volumes)
+
+---
+
+### 3.2 Container Security Fundamentals
+**Goal**: Implement security best practices in containerized applications
+
+**Topics**:
+- Run containers with least privilege (minimal permissions)
+- Run processes as non-root user (avoid UID 0)
+- Use read-only filesystems (`--read-only` flag)
+- Manage secrets securely without hardcoding in images
+- Scan images for vulnerabilities (Docker Scout, Trivy, Snyk)
+- Understand image signing and trusted registries
+- Resource limits to prevent DoS (`--memory`, `--cpus`)
+- User namespace mapping
+
+**Practice**:
+- Create container with non-root user and verify
+- Scan an image for vulnerabilities
+- Use Docker secrets for sensitive data
+- Set resource limits on containers
+- Run container with read-only filesystem
+
+**Resources**:
+- [Docker security guide](https://docs.docker.com/engine/security/)
+- [Rootless mode](https://docs.docker.com/engine/security/rootless/)
+- [Docker Scout](https://docs.docker.com/scout/)
+- [Running containers with resource constraints](https://docs.docker.com/config/containers/resource_constraints/)
+- [Managing sensitive data with secrets](https://docs.docker.com/engine/swarm/secrets/)
+
+---
+
+## Phase 4: Release & Operations (Weeks 7-8)
+
+### 4.1 Registries and Release Workflow
+**Goal**: Establish CI/CD and release processes
+
+**Topics**:
+- Push/pull images from Docker Hub and private registries
+- Image tagging strategy: `latest`, semantic versioning, commit hashes
+- Automated release workflow from source to registry
+- Create private registries (Docker Registry, Harbor)
+- Clean up unused images, containers, and networks safely
+- Mirror images and manage registry access
+
+**Practice**:
+- Tag and push image to Docker Hub
+- Create release workflow with Git tags and Docker tags
+- Set up local private registry
+- Implement cleanup scripts for unused resources
+
+**Resources**:
+- [Docker Hub documentation](https://docs.docker.com/docker-hub/)
+- [Docker image tag reference](https://docs.docker.com/reference/cli/docker/image/tag/)
+- [Docker Registry deployment](https://docs.docker.com/registry/deploying/)
+- [Docker build GitHub Actions](https://docs.docker.com/build/ci/github-actions/)
+
+---
+
+### 4.2 Observability and Debugging
+**Goal**: Monitor, log, and debug containerized applications
+
+**Topics**:
+- Read and analyze container logs (`docker logs` with filtering)
+- Inspect container state (`docker inspect` for detailed info)
+- Monitor resource usage and performance (`docker stats`)
+- Collect metrics (CPU, memory, I/O, network)
+- Centralized logging with ELK stack or alternatives
+- Distributed tracing basics
+- Debug containerized applications using debugging tools
+
+**Practice**:
+- Analyze logs from failing container
+- Use `docker inspect` to troubleshoot configuration
+- Monitor resource usage under load
+- Set up centralized logging
+
+**Resources**:
+- [docker logs reference](https://docs.docker.com/reference/cli/docker/container/logs/)
+- [docker inspect reference](https://docs.docker.com/reference/cli/docker/inspect/)
+- [Runtime metrics](https://docs.docker.com/engine/containers/runmetrics/)
+- [View logs for a service](https://docs.docker.com/compose/how-tos/view-compose-logs/)
+
+---
+
+### 4.3 CI/CD with Docker
+**Goal**: Automate image building and testing
+
+**Topics**:
+- Set up automated image builds on code push
+- Test containers before pushing to registry
+- Tag images automatically based on Git metadata
+- Scan images in CI pipeline
+- Implement multi-environment deployments
+- Create reusable CI/CD workflows
+
+**Practice**:
+- Create GitHub Actions workflow to build and push image
+- Add image scanning to CI/CD pipeline
+- Implement semantic versioning in automated builds
+
+**Resources**:
+- [Docker build GitHub Actions](https://docs.docker.com/build/ci/github-actions/)
+- [Test before push workflow](https://docs.docker.com/build/ci/github-actions/test-before-push/)
+- [Manage tags and labels](https://docs.docker.com/build/ci/github-actions/manage-tags-labels/)
+
+---
+
+## Progression Checklist
+
+- [ ] **Phase 1**: Can write multi-stage Dockerfiles, optimize images, use BuildKit
+- [ ] **Phase 2**: Manage complex Compose files, debug network issues
+- [ ] **Phase 3**: Secure containers, manage persistence, scan vulnerabilities
+- [ ] **Phase 4**: Automate releases, centralize logging, monitor applications
+
+**Next Step After Intermediate**: [Docker Swarm](../../Notes/Docker/README.md) or **Kubernetes** preparation with container orchestration concepts.
 - Add health checks for web apps, APIs, databases, and queues.
 - Debug failed containers using exit codes and temporary shell access.
 
@@ -176,18 +371,7 @@ Use these resources after your local notes. They are official documentation or o
 - Clean up containers and volumes after the test run.
 - Goal: learn how Docker improves repeatable testing.
 
-## Intermediate Docker learning checklist
 
-- [ ] I can write a clean Dockerfile without copying unnecessary files.
-- [ ] I can reduce image size using multi-stage builds.
-- [ ] I can run a multi-service app with Docker Compose.
-- [ ] I can debug logs, networking, volumes, and failed containers.
-- [ ] I can persist and back up database data using volumes.
-- [ ] I can build and push images to a registry.
-- [ ] I can add health checks and environment-specific Compose files.
-- [ ] I can scan images and avoid common security mistakes.
-- [ ] I can build Docker images in a CI/CD pipeline.
-- [ ] I can explain how Docker concepts map to Kubernetes basics.
 
 ## How to use these notes
 
