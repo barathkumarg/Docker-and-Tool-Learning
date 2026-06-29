@@ -3,6 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
+    # The RUN instruction is defined in the Dockerfile and runs during image build.
     container_name: web_app
     ports:
       - "5000:5000"
