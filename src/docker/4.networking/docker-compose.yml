@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+
+  nginx-proxy:
+    image: nginx:latest
+    container_name: nginx-proxy-container
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - frontend # Bridges the 2 networks together
+      - flask-app
+
+
+  flask-app:
+    #build: ./flask-app  - Use the below instead of building it sepearely
+    build:
+      context: ./flask-app
+      dockerfile_inline: |
+        FROM python:3.9-slim
+        WORKDIR /app
+        COPY app.py .
+        RUN pip install flask redis
+        EXPOSE 5000 
+        ENTRYPOINT ["python"]
+        CMD ["app.py"]
+    container_name: flask-app
+    #ports:  -> used for exposing to host:
+    # - "5000:5000"
+    expose:
+      - "5000"  # Exposes the port to other containers in the same network
+    networks:
+      - flask-app
+  
+  redis-app:
+    image: redis:latest
+    container_name: redis-app
+    ports:
+      - "6379:6379"
+    networks:
+      - flask-app
+
+  
+networks:
+  flask-app:
+    driver: bridge
+  frontend:
+    driver: bridge
+
+    
+

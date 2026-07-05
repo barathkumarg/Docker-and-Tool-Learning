@@ -1,31 +1,31 @@
-# Docker Compose Practice
+# Security Basics
 
 ## Status
 - [ ] Not started
 
 ## Tasks
-### 1. Create the Compose setup
+### 1. Run a container as a non-root user
 - [ ] I will add this here once I practise it.
 
 ```text
 I will add this here once I practise it.
 ```
 
-### 2. Build and run the services
+### 2. Use read-only filesystems where possible
 - [ ] I will add this here once I practise it.
 
 ```text
 I will add this here once I practise it.
 ```
 
-### 3. Inspect containers and logs
+### 3. Minimize image contents
 - [ ] I will add this here once I practise it.
 
 ```text
 I will add this here once I practise it.
 ```
 
-### 4. Stop, restart, and clean up
+### 4. Record your learning
 - [ ] I will add this here once I practise it.
 
 ```text

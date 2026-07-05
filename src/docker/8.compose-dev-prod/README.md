@@ -1,31 +1,31 @@
-# Docker Compose Practice
+# Compose for Development and Production
 
 ## Status
 - [ ] Not started
 
 ## Tasks
-### 1. Create the Compose setup
+### 1. Create a development override file
 - [ ] I will add this here once I practise it.
 
 ```text
 I will add this here once I practise it.
 ```
 
-### 2. Build and run the services
+### 2. Create a production-oriented compose setup
 - [ ] I will add this here once I practise it.
 
 ```text
 I will add this here once I practise it.
 ```
 
-### 3. Inspect containers and logs
+### 3. Compare compose commands
 - [ ] I will add this here once I practise it.
 
 ```text
 I will add this here once I practise it.
 ```
 
-### 4. Stop, restart, and clean up
+### 4. Record your learning
 - [ ] I will add this here once I practise it.
 
 ```text
