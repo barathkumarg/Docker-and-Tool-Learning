@@ -38,16 +38,19 @@ By the end of this roadmap, you should be comfortable with:
 - [x] Practice folder available in [4.networking](4.networking/README.md)
 
 ### Task 5 — Health checks and troubleshooting
-- [ ] Practice folder planned in [5.healthchecks-and-troubleshooting](5.healthchecks-and-troubleshooting/README.md)
+- [x] Practice folder available in [5.healthchecks-and-troubleshooting](5.healthchecks-and-troubleshooting/README.md)
 
 ### Task 6 — Security basics
-- [ ] Practice folder planned in [6.security-basics](6.security-basics/README.md)
+- [x] Practice folder available in [6.security-basics](6.security-basics/README.md)
 
 ### Task 7 — Registry and image sharing
-- [ ] Practice folder planned in [7.registry-and-sharing](7.registry-and-sharing/README.md)
+- [x] Practice folder available in [7.registry-and-sharing](7.registry-and-sharing/README.md)
 
 ### Task 8 — Compose for development and production
-- [ ] Practice folder planned in [8.compose-dev-prod](8.compose-dev-prod/README.md)
+- [x] Practice folder available in [8.compose-dev-prod](8.compose-dev-prod/README.md)
+
+### Final Project — Production-style Docker workflow
+- [x] Capstone task available in [9.final-project](9.final-project/README.md)
 
 ## Next Concepts to Learn After These Tasks
 - Docker Swarm basics and `docker stack`

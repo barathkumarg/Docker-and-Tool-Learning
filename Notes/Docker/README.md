@@ -11,6 +11,12 @@
 - [7. Docker Registry](7.docker-registry.md)
 - [8. Docker Compose](8.docker-compose.md)
 - [9. Container Orchestration](9.container-orchestration.md)
+- [10. Docker Health Checks and Troubleshooting](10.docker-healthchecks-and-troubleshooting.md)
+- [11. Docker Security Basics](11.docker-security-basics.md)
+- [12. Docker Image Optimization](12.docker-image-optimization.md)
+- [13. Docker Registry Workflow](13.docker-registry-workflow.md)
+- [14. Docker Compose for Development and Production](14.docker-compose-dev-prod.md)
+- [15. Docker Swarm, CI/CD, and Image Scanning](15.docker-swarm-and-ci-cd.md)
 
 ## Already covered in these notes
 
@@ -28,11 +34,12 @@
 ## Intermediate concepts to learn next
 These topics are now part of the planned practice path for the Docker exercises:
 
-- Health checks and troubleshooting with `docker compose ps`, `docker logs`, and `docker inspect`
-- Container security basics such as running as a non-root user and using a read-only filesystem
-- Image optimization with multi-stage builds and smaller base images
-- Registry workflow including tagging, pushing, and pulling images
-- Development versus production Compose patterns using override files and environment files
+- Health checks and troubleshooting with `docker compose ps`, `docker logs`, and `docker inspect` are covered in [Docker Health Checks and Troubleshooting](10.docker-healthchecks-and-troubleshooting.md).
+- Container security basics such as running as a non-root user and using a read-only filesystem are covered in [Docker Security Basics](11.docker-security-basics.md).
+- Image optimization with multi-stage builds and smaller base images are covered in [Docker Image Optimization](12.docker-image-optimization.md).
+- Registry workflow including tagging, pushing, and pulling images are covered in [Docker Registry Workflow](13.docker-registry-workflow.md).
+- Development versus production Compose patterns using override files and environment files are covered in [Docker Compose for Development and Production](14.docker-compose-dev-prod.md).
+- Docker Swarm basics, `docker stack`, CI/CD pipelines using Docker images, and image scanning with vulnerability checks are covered in [Docker Swarm, CI/CD, and Image Scanning](15.docker-swarm-and-ci-cd.md).
 
 ## Practice roadmap for intermediate Docker
 To continue beyond the current notes, use the practice roadmap in [src/docker/README.md](../../src/docker/README.md). It is designed for learners who want to move from beginner Docker knowledge to an intermediate level by practicing Compose, image optimization, volumes, networking, troubleshooting, and registry workflows.

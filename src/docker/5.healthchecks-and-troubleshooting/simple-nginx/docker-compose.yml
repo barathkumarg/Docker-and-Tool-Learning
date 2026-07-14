@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+    web:
+        image: nginx:alpine
+        container_name: simple-nginx
+        ports:
+            - "8080:80"
+        healthcheck:
+            #test: ["CMD", "curl", "-f", "http://localhost/"]
+            test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
