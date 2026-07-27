@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  python-app:
+    build: ./python-app
+    container_name: python-app
+    ports:
+      - "5000:5000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL 
+    #cap_add:
+    #  - NET_ADMIN  -> Add if you need to add capabilities
+    volumes: # Best pratice to remove the mount if not used
+      - ./python-app:/app:ro
+      - ./python-app/secrets/api_key.txt:/run/secrets/api_key:ro
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
