@@ -13,51 +13,107 @@ Create a simple Docker image, push it to a registry, and pull it back to verify 
 ## Subtasks
 
 ### 1. Create a simple application image
-- [ ] Create a small app or use a basic example for practice
-- [ ] Write a Dockerfile for the app
-- [ ] Build the image locally
+- [x] Create a small app or use a basic example for practice
+- [x] Write a Dockerfile for the app
+- [x] Build the image locally
+
+```python
+# main.py
+
+# create a sample fat api application , endpoint /health and it returns the healthy on response
+# create a enpoint where it checks the given number is prime endpoint /isprime?number=n
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/health")
+def read_health():
+    return {"status": "healthy"}
+
+
+@app.get("/isprime")
+def check_prime(number: int):
+    if number < 2:
+        return {"number": number, "is_prime": False}
+    for i in range(2, int(number ** 0.5) + 1):
+        if number % i == 0:
+            return {"number": number, "is_prime": False}
+    return {"number": number, "is_prime": True}
+
+```
+
+```dockerfile
+FROM --platform=amd64 python:3.11-slim
+
+WORKDIR /app
+EXPOSE 5000
+COPY requirements.txt requirements.txt
+COPY main.py main.py
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN useradd -m appuser
+RUN chown -R appuser:appuser /app
+USER appuser
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+```
+
+```bash
+docker build -t python-prime-app .
+```
+
+```bash
+docker run -d -p 5000:5000 python-prime-app --name python-prime-container
+```
 
 ### 2. Tag the image properly
-- [ ] Add a meaningful image tag
-- [ ] Use a repository name and version tag
-- [ ] Practice tagging with a personal or local registry name
+- [x] Add a meaningful image tag
+- [x] Use a repository name and version tag
+- [x] Practice tagging with a personal or local registry name
+
+```bash
+docker login 
+
+docker tag python-prime-app barathkumargn/python-prime-app:v1.0
+```
 
 ### 3. Push the image to a registry
-- [ ] Use Docker Hub or a local registry for practice
-- [ ] Authenticate if required
-- [ ] Push the image and verify that it is available remotely
+- [x] Use Docker Hub or a local registry for practice
+- [x] Authenticate if required
+- [x] Push the image and verify that it is available remotely
+
+```bash
+docker push barathkumargn/python-prime-app:1.0
+```
 
 ### 4. Pull the image from the registry
-- [ ] Remove the local image if needed
-- [ ] Pull the image again from the registry
-- [ ] Confirm that the image can be reused on another machine or environment
+- [x] Remove the local image if needed
+- [x] Pull the image again from the registry
+- [x] Confirm that the image can be reused on another machine or environment
+
+```bash
+docker rmi python-prime-app:1.0
+```
+
 
 ### 5. Run the pulled image
-- [ ] Start a container from the pulled image
-- [ ] Verify that the application works after pulling
-- [ ] Confirm that the image behaves the same way as the original local build
+- [x] Start a container from the pulled image
+- [x] Verify that the application works after pulling
+- [x] Confirm that the image behaves the same way as the original local build
+
+```bash 
+docker pull barathkumargn/python-prime-app:v0.0.1
+
+docker run -d -p 5000:5000 barathkumargn/python-prime-app:v0.0.1 --name python-prime-container
+```
 
 ### 6. Practice image versioning and reuse
-- [ ] Tag the same image with multiple versions
-- [ ] Compare the behavior of different tags
-- [ ] Understand how tags help with rollout and rollback
+- [x] Tag the same image with multiple versions
+- [x] Compare the behavior of different tags
+- [x] Understand how tags help with rollout and rollback
 
 ### 7. Clean up and document results
-- [ ] Remove temporary containers and images if needed
-- [ ] Record the push and pull commands used
-- [ ] Note the final results and learning points
-
-## Working Expected
-
-When completed successfully, you should be able to:
-- build a Docker image locally
-- tag it clearly
-- push it to a registry
-- pull it back and run it successfully
-- understand how image sharing works in real-world Docker workflows
-
-## Notes
-
-- A registry is where Docker images are stored and shared.
-- Docker Hub is the most common public registry, while private or local registries are common in teams.
-- Image tags are important for versioning and deployment tracking.
+- [x] Remove temporary containers and images if needed
+- [x] Record the push and pull commands used
+- [x] Note the final results and learning points

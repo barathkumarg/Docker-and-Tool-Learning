@@ -1,0 +1,3 @@
+# requirementa for fast api
+fastapi==0.95.2
+uvicorn==0.21.1
